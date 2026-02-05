@@ -2,13 +2,6 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { GoogleFinanceData } from '../types';
 
-/**
- * Google Finance Scraper
- * 
- * Scrapes P/E Ratio and Latest Earnings from Google Finance
- * Uses web scraping with axios and cheerio
- */
-
 // Scrape P/E and Earnings for a single stock
 export async function fetchPEAndEarnings(symbol: string, exchange: string = 'NSE'): Promise<GoogleFinanceData | null> {
   try {
