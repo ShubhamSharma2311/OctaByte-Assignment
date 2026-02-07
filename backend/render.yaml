@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: portfolio-dashboard-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: CACHE_CMP_TTL
+        value: 900
+      - key: CACHE_PE_RATIO_TTL
+        value: 3600
+      - key: CACHE_EARNINGS_TTL
+        value: 3600
+      - key: SCRAPER_INTERVAL_MINUTES
+        value: 15
+      - key: SCRAPER_TIMEOUT_MS
+        value: 60000
+      - key: PORTFOLIO_FILE_PATH
+        value: ./E555815F_58D029050B.xlsx
