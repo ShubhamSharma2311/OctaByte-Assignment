@@ -29,7 +29,7 @@ export default function PortfolioDashboard() {
       const nameB = b.particulars || b.symbol || '';
       return nameA.localeCompare(nameB);
     });
-  }, [data?.sectors]);
+  }, [data]);
 
   if (loading && !data) {
     return (
