@@ -4,8 +4,8 @@ services:
     env: node
     region: oregon
     plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
         value: production
@@ -22,4 +22,4 @@ services:
       - key: SCRAPER_TIMEOUT_MS
         value: 60000
       - key: PORTFOLIO_FILE_PATH
-        value: ./E555815F_58D029050B.xlsx
+        value: ./backend/E555815F_58D029050B.xlsx
