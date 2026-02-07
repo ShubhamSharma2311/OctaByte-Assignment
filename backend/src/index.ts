@@ -27,22 +27,9 @@ async function startServer(): Promise<void> {
     const stocks = portfolioLoader.load();
     console.log(`Loaded ${stocks.length} stocks\n`);
 
-    // STEP 2: Run initial scraping to populate cache
-    console.log('STEP 2: Running initial scraping...');
-    await scraperService.runScraping();
-
-    // STEP 3: Schedule periodic scraping using cron
-    console.log(`\nSTEP 3: Scheduling periodic scraping every ${config.scraper.intervalMinutes} minutes`);
-    const cronExpression = `*/${config.scraper.intervalMinutes} * * * *`;
-    
-    cron.schedule(cronExpression, async () => {
-      console.log('\n[CRON] Scheduled scraping triggered');
-      await scraperService.runScraping();
-    });
-
-    // STEP 4: Start Express server
+    // STEP 2: Start Express server FIRST (so Render detects the port)
     app.listen(config.server.port, () => {
-      console.log('\n========================================');
+      console.log('========================================');
       console.log(`SERVER RUNNING ON PORT ${config.server.port}`);
       console.log('========================================');
       console.log('\nAvailable Endpoints:');
@@ -51,6 +38,21 @@ async function startServer(): Promise<void> {
       console.log(`  GET http://localhost:${config.server.port}/api/status/scraper`);
       console.log(`  GET http://localhost:${config.server.port}/api/status/cache`);
       console.log('\n========================================\n');
+    });
+
+    // STEP 3: Run initial scraping in background (non-blocking)
+    console.log('STEP 2: Starting initial scraping in background...\n');
+    scraperService.runScraping()
+      .then(() => console.log('\n[STARTUP] Initial scraping completed'))
+      .catch((error: any) => console.error('[STARTUP] Initial scraping failed:', error.message));
+
+    // STEP 4: Schedule periodic scraping using cron
+    console.log(`STEP 3: Scheduling periodic scraping every ${config.scraper.intervalMinutes} minutes\n`);
+    const cronExpression = `*/${config.scraper.intervalMinutes} * * * *`;
+    
+    cron.schedule(cronExpression, async () => {
+      console.log('\n[CRON] Scheduled scraping triggered');
+      await scraperService.runScraping();
     });
     
   } catch (error: any) {
