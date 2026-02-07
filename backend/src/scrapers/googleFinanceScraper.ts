@@ -2,13 +2,60 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { GoogleFinanceData } from '../types';
 
+const BSE_TO_NSE_MAP: Record<string, string> = {
+  '532174': 'ICICIBANK',
+  '544252': 'BAJAJHFL',
+  '542651': 'KPITTECH',
+  '544028': 'TATATECH',
+  '544107': 'BLSE',
+  '532790': 'TANLA',
+  '532540': 'TATACONSUM',
+  '500331': 'PIDILITIND',
+  '500400': 'TATAPOWER',
+  '542323': 'KPIGREEN',
+  '532667': 'SUZLON',
+  '542851': 'GENSOL',
+  '543517': 'HARIOMPIPE',
+  '542652': 'POLYCAB',
+  '543318': 'CLEANSCIENCE',
+  '506401': 'DEEPAKNTR',
+  '541557': 'FINEORG',
+  '533282': 'GRAVITA',
+  '540719': 'SBILIFE',
+  '500209': 'INFY',
+  '543237': 'HAPPSTMNDS',
+  '543272': 'EASEMYTRIP',
+  '511577': 'STEL',
+};
+
+function formatSymbolForGoogle(symbol: string): string {
+  const symbolStr = String(symbol).trim();
+  if (!symbolStr) return symbolStr;
+  if (symbolStr.includes(':')) return symbolStr;
+
+  if (BSE_TO_NSE_MAP[symbolStr]) {
+    return `${BSE_TO_NSE_MAP[symbolStr]}:NSE`;
+  }
+
+  if (/^\d+$/.test(symbolStr)) {
+    return `${symbolStr}:BOM`;
+  }
+
+  return `${symbolStr}:NSE`;
+}
+
+function normalizeText(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
 // Scrape P/E and Earnings for a single stock
-export async function fetchPEAndEarnings(symbol: string, exchange: string = 'NSE'): Promise<GoogleFinanceData | null> {
+export async function fetchPEAndEarnings(symbol: string): Promise<GoogleFinanceData | null> {
   try {
     console.log(`Scraping P/E and Earnings for ${symbol} from Google Finance...`);
 
     // Build URL: https://www.google.com/finance/quote/RELIANCE:NSE
-    const url = `https://www.google.com/finance/quote/${symbol}:${exchange}`;
+    const googleSymbol = formatSymbolForGoogle(symbol);
+    const url = `https://www.google.com/finance/quote/${googleSymbol}`;
     
     // Fetch HTML page
     const response = await axios.get(url, {
@@ -44,6 +91,33 @@ export async function fetchPEAndEarnings(symbol: string, exchange: string = 'NSE
       }
     });
 
+    if (!latestEarnings) {
+      const labelNodes = $('*').filter((_, el) => {
+        const text = normalizeText($(el).text());
+        return /earnings date/i.test(text);
+      });
+
+      labelNodes.each((_, el) => {
+        if (latestEarnings) return;
+        const labelText = normalizeText($(el).text());
+        const parent = $(el).parent();
+        const parentText = normalizeText(parent.text());
+        const siblingText = normalizeText(
+          parent
+            .children()
+            .map((_, child) => normalizeText($(child).text()))
+            .get()
+            .filter(text => text && text !== labelText)
+            .join(' ')
+        );
+
+        const candidate = siblingText || parentText.replace(labelText, '').trim();
+        if (candidate) {
+          latestEarnings = candidate;
+        }
+      });
+    }
+
     console.log(`${symbol}: P/E=${peRatio}, Earnings=${latestEarnings}`);
     
     return {
@@ -60,14 +134,14 @@ export async function fetchPEAndEarnings(symbol: string, exchange: string = 'NSE
 }
 
 // Fetch P/E and Earnings for multiple stocks
-export async function fetchMultiplePEAndEarnings(symbols: string[], exchange: string = 'NSE'): Promise<Map<string, GoogleFinanceData>> {
+export async function fetchMultiplePEAndEarnings(symbols: string[]): Promise<Map<string, GoogleFinanceData>> {
   const results = new Map<string, GoogleFinanceData>();
   
   console.log(`Scraping P/E and Earnings for ${symbols.length} stocks...`);
 
   // Scrape one by one with delay
   for (const symbol of symbols) {
-    const data = await fetchPEAndEarnings(symbol, exchange);
+    const data = await fetchPEAndEarnings(symbol);
     
     if (data) {
       results.set(symbol, data);
