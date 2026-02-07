@@ -17,7 +17,8 @@ export const usePortfolioData = (): UsePortfolioDataReturn => {
 
   const fetchPortfolioData = async () => {
     try {
-      const response = await axios.get<ApiResponse>('http://localhost:5000/api/portfolio');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const response = await axios.get<ApiResponse>(`${apiUrl}/portfolio`);
       
       if (response.data.success) {
         setData(response.data.data);
