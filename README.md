@@ -256,34 +256,7 @@ Simple health check endpoint.
 - Current Success Rate: 8/29 stocks (Yahoo Finance), 100% structure (Google Finance)
 - Memory Usage: Minimal (in-memory cache for 29 stocks)
 
-## Environment Variables
 
-No environment variables are currently required. All configuration is in code files. For production deployment, consider externalizing:
-
-- PORT
-- EXCEL_FILE_PATH
-- API_BASE_URL
-- CACHE_TTL_SECONDS
-- SCRAPER_INTERVAL_MINUTES
-
-## Deployment
-
-### Backend Deployment (Render/Railway)
-
-1. Push code to GitHub repository
-2. Connect repository to hosting platform
-3. Configure build command: `npm install && npm run build`
-4. Configure start command: `npm start`
-5. Ensure Excel file is included in repository
-6. Set PORT environment variable if required
-
-### Frontend Deployment (Vercel/Netlify)
-
-1. Push code to GitHub repository
-2. Connect repository to hosting platform
-3. Set build command: `npm run build`
-4. Set output directory: `.next`
-5. Update API_BASE_URL to production backend URL
 
 ## Development Commands
 
